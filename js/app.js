@@ -88,11 +88,8 @@ $(document).ready(function() {
 		return false;
 	});
 
-
-	$('#btnAddLast').click(function() {
-		addToQueue();
-	});
 	$('#btnClear').click(clearQueue);
+	$('#btnAddLast').click(function() { addToQueue(true); });
 	$('#btnPreview').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
 
 	key('command+z, ctrl+z', function() {
@@ -213,13 +210,14 @@ function noteOff(noteNumber) {
 }
 
 // Adds a series of notes to the cannon
-function addToQueue() {
+function addToQueue(keepQueue) {
 	if (lastQueue.length <= 0) return;
 	queue.push(lastQueue);
 	var longest = $('#queue th').length - 1;
 	var next = $('#queue tbody tr').length + 1;
 	var toAdd = lastQueue.length - longest;
 
+	// fill out the rest of the headers with <th>'s if more notes are played than the longest chord we've heard
 	if (lastQueue.length > longest) {
 		for (var i = 1; i < toAdd + 1; i++) {
 			$('#queue thead tr').append($('<th>').text('Note #' + (longest + i)));
@@ -242,9 +240,12 @@ function addToQueue() {
 
 	$('#queue tbody').append(row);
 
-	$('#lastQueue tr td').remove();
-	$('#lastQueue tr').append($('<td>').text('None'));
-	lastQueue = [];
+	// unless flag is set, remove the current queue
+	if (!keepQueue) {
+		$('#lastQueue tr td').remove();
+		$('#lastQueue tr').append($('<td>').text('None'));
+		lastQueue = [];
+	}
 
 	// scroll to note when added
 	var queueBox = $('#box');
