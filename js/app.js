@@ -5,7 +5,6 @@ var selectedOutput;
 var queue = []; // the queue. for now we'll only support one note cannon
 var previewQueue = []; // preview queue for hearing before adding
 var lastQueue = []; // last queue for retroactively adding
-// TODO: make it so that lazy input works
 var canAdvance = true; // if a note is already being played we'll need to finish it first
 var replaceOnRest = false; // if this flag is set then clear the queue the next note played
 // FIXME: this doesn't work when we switch it in the middle of a mode
@@ -41,6 +40,15 @@ $(document).ready(function() {
 		});
 	});
 
+	for (var i = 1; i < 17; i++) {
+		$('#selInputChannel').append($('<option>').val(i).text(i));
+		// $('#selOutputChannel').append($('<option>').val(i).text(i));
+	};
+
+	$('button').focus(function() {
+        this.blur();
+    });
+
 
 	// Queue logic
 	$('#btnPlay').mousedown(function() {
@@ -53,6 +61,11 @@ $(document).ready(function() {
 		// FIXME: if both mouse and keyboard are down this may break
 		finishAdvanceQueue();
 	});
+
+	$('#btnReset').click(function() {
+		position = -1;
+		$('#queue tbody tr').removeClass('active');
+	})
 
 	$('#txtTrigger').keydown(function(ev) {
 		if (ev.repeat !== undefined) canAdvance = !ev.repeat;
@@ -80,7 +93,12 @@ $(document).ready(function() {
 
 	$('#btnAddLast').click(function() {
 		addToQueue();
-	})
+	});
+
+	key('command+z, ctrl+z', function() {
+		removeFromQueue();
+		// TODO: when we add to the queue, we should be able to append at certain parts
+	});
 });
 
 // When MIDI access is requested this function is run.
@@ -136,16 +154,18 @@ function midiMessageReceived(ev) {
     if (cmd === 8 || ((cmd === 9) && (velocity === 0))) { // noteoff
       noteOff(noteNumber);
     } else if (cmd === 9) { // note on
-      noteOn(noteNumber, velocity);
+      noteOn(noteNumber, velocity, channel);
     } else if (cmd === 11) { // controller message
-      controller(noteNumber, velocity);
+      //controller(noteNumber, velocity);
     }
 }
 
 // When a note is ON, this function will execute
-function noteOn(noteNumber, velocity) {
+function noteOn(noteNumber, velocity, channel) {
 	// Log the note
-	$('#monitor').append($('<div>').addClass('note-on').text("ON: " + noteNumber + ',' + velocity));
+	$('#monitor').append($('<div>').addClass('note-on').text('ON: ' + noteNumber + ',' + velocity + ', CH: ' + channel));
+
+	if ($('#cbUseChannelFiltering').prop('checked') && channel.toString() !== $('#selInputChannel :selected').val()) return;
 
 	var note = {number: noteNumber, velocity: velocity};
 
@@ -193,6 +213,7 @@ function noteOff(noteNumber) {
 
 // Adds a series of notes to the cannon
 function addToQueue() {
+	if (lastQueue.length <= 0) return;
 	queue.push(lastQueue);
 	var longest = $('#queue th').length - 1;
 	var next = $('#queue tbody tr').length + 1;
@@ -223,6 +244,24 @@ function addToQueue() {
 	$('#lastQueue tr td').remove();
 	$('#lastQueue tr').append($('<td>').text('None'));
 	lastQueue = [];
+
+	// scroll to note when added
+	var queueBox = $('#box');
+	var scrollTo = $('#queue tbody tr:last-child');
+	queueBox.animate({
+		scrollTop: scrollTo.offset().top - queueBox.offset().top + queueBox.scrollTop()
+	}, 10);
+}
+
+// "Undo" functionality
+function removeFromQueue(pos) {
+	// TODO: a button for this needs to be on the main screen
+	// TODO: UI overhaul
+	if (!pos) pos = queue.length - 1;
+	queue.splice(pos);
+
+	// TODO: remove empty columns
+	$('#queue tbody tr:last-child').remove();
 }
 
 // Resets the cannon
@@ -247,6 +286,13 @@ function advanceQueue(over) {
 
 	$('#queue tbody tr').removeClass('active');
 	$($('#queue tbody tr')[position]).addClass('active');
+
+	// scroll to note being played
+	var queueBox = $('#box');
+	var scrollTo = $('#queue tbody tr.active');
+	queueBox.animate({
+    	scrollTop: scrollTo.offset().top - queueBox.offset().top + queueBox.scrollTop()
+	}, 10);
 
 	var notes = queue[position];
 	$.each(notes, function(i, note) {

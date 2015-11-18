@@ -15,6 +15,7 @@
 
 <p>MIDI Input: <select id="selInputs"></select> <input type="checkbox" id="cbEagerInput" checked /> Eager Input <input type="checkbox" id="cbReplaceOnRest" checked /> Replace all last notes on rest</p>
 <p>MIDI Output: <select id="selOutputs"></select> <input type="checkbox" id="cbFixedVelocity" /> Fixed output velocity</p>
+<p>MIDI Input Channel: <select id="selInputChannel"></select><!--  MIDI Output Channel: <select id="selOutputChannel"></select>  --><input id="cbUseChannelFiltering" type="checkbox" /> Use channel filter</p>
 <p><input id="txtTrigger" type="text" placeholder="Click here and press keys with the keyboard to trigger notes." /></p>
 
 <div id="actions">
@@ -30,13 +31,15 @@
 
 <p>Cannon:</p>
 
-<table id="queue">
-	<thead>
-		<th style="width: 20px" id="counter">#</th>
-	</thead>
-	<tbody>
-	</tbody>
-</table>
+<div id="box">
+	<table id="queue">
+		<thead>
+			<th style="width: 20px" id="counter">#</th>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+</div>
 
 </div>
 
