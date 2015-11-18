@@ -174,7 +174,8 @@ function noteOn(noteNumber, velocity, channel) {
 		replaceOnRest = false;
 	}
 
-	lastQueue.push(note);
+	// If the note is already in the queue (same number) don't include it
+	if (!_.findWhere(lastQueue, {number: note.number})) lastQueue.push(note);
 
 	// Preview the note
 	previewQueue.push(note);
