@@ -45,6 +45,7 @@ $(document).ready(function() {
 		// $('#selOutputChannel').append($('<option>').val(i).text(i));
 	};
 
+	// Don't allow the space key to trigger buttons
 	$('button').focus(function() {
         this.blur();
     });
@@ -87,13 +88,11 @@ $(document).ready(function() {
 		return false;
 	});
 
-	$('#btnClear').click(function() {
-		clearQueue();
-	});
 
 	$('#btnAddLast').click(function() {
 		addToQueue();
 	});
+	$('#btnClear').click(clearQueue);
 
 	key('command+z, ctrl+z', function() {
 		removeFromQueue();
