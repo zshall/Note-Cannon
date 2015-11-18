@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>Note Cannon</title>
+<link href="css/app.css" rel="stylesheet" />
+<script src="js/jquery-2.1.4.min.js"></script>
+<script src="js/underscore-min.js"></script>
+<script src="js/keymaster.js"></script>
+<script src="js/app.js"></script>
+</head>
+<body>
+
+<div id="monitor">MIDI Input Monitor</div>
+
+<div id="container">
+
+<p>MIDI Input: <select id="selInputs"></select> <input type="checkbox" id="cbEagerInput" checked /> Eager Input <input type="checkbox" id="cbReplaceOnRest" checked /> Replace all last notes on rest</p>
+<p>MIDI Output: <select id="selOutputs"></select> <input type="checkbox" id="cbFixedVelocity" /> Fixed output velocity</p>
+<p><input id="txtTrigger" type="text" placeholder="Click here and press keys with the keyboard to trigger notes." /></p>
+
+<div id="actions">
+	<button id="btnClear">Reset</button>
+	<button id="btnPreview">Preview Last Note(s)</button>
+	<button id="btnAddLast">Add Last Note(s)</button>
+	<button id="btnReset">Reset Queue Position</button>
+	<button id="btnPlay">Play (Tap Melody)</button>
+</div>
+
+<p>Last Played Notes:</p>
+<table id="lastQueue"><tr><td>None</td></tr></table>
+
+<p>Cannon:</p>
+
+<table id="queue">
+	<thead>
+		<th style="width: 20px" id="counter">#</th>
+	</thead>
+	<tbody>
+	</tbody>
+</table>
+
+</div>
+
+</body>
+</html>
