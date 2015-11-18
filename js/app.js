@@ -93,6 +93,7 @@ $(document).ready(function() {
 		addToQueue();
 	});
 	$('#btnClear').click(clearQueue);
+	$('#btnPreview').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
 
 	key('command+z, ctrl+z', function() {
 		removeFromQueue();
@@ -309,4 +310,17 @@ function finishAdvanceQueue() {
 		selectedOutput.send([0x90, note.number, 0]);
 	});
 	canAdvance = true;
+}
+
+// Preview notes
+function startPreviewNotes() {
+	$.each(lastQueue, function(i, note) {
+		selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+	});
+}
+// Preview notes
+function endPreviewNotes() {
+	$.each(lastQueue, function(i, note) {
+		selectedOutput.send([0x90, note.number, 0]);
+	});
 }
