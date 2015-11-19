@@ -95,7 +95,7 @@ $(document).ready(function() {
 
 	$('#btnClear').click(clearQueue);
 	$('#btnAddLast').click(function() { addToQueue(true); });
-	$('#btnPreview').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
+	$('#btnPreview, #btnAddLast').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
 
 	key('command+z, ctrl+z', function() {
 		removeFromQueue();
