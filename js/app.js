@@ -7,7 +7,6 @@ var previewQueue = []; // preview queue for hearing before adding
 var lastQueue = []; // last queue for retroactively adding
 var keyPositions = {}; // keep a dictionary of which keys held correspond to which notes
 var replaceOnRest = true; // if this flag is set then clear the queue the next note played
-// TODO: make it so that we can hold as many keys as we want (perhaps a map of each key being held)
 // TODO: allow MIDI input to be used in "performance" mode or define an octave or note range for each cannon
 
 // the position in the current queue
@@ -61,7 +60,6 @@ $(document).ready(function() {
 	});
 
 	$('#btnPlay').mouseup(function(ev) {
-		// FIXME: if both mouse and keyboard are down this may break
 		finishAdvanceQueue(ev.which);
 	});
 
@@ -76,8 +74,6 @@ $(document).ready(function() {
 	});
 
 	$('#triggerZone').keyup(function(ev) {
-		// FIXME: if both mouse and keyboard are down this may break
-		// or if more than one key is down at a time
 		finishAdvanceQueue(ev.which);
 		return false;
 	});
@@ -275,6 +271,7 @@ function clearQueue() {
 	lastQueue = [];
 	previewQueue = [];
 	position = -1;
+	keyPositions = {}; // ??? does this have to do with TODO below?
 	// TODO: stop playing all notes still playing
 	$('#queue thead th:not(.header), #queue tbody tr').remove();
 }
@@ -305,12 +302,33 @@ function advanceQueue(keyCode) {
 function finishAdvanceQueue(keyCode) {
 	var longest = $('#queue tbody tr').length;
 	if (longest === 0) return;
-	var pos = (null !== keyPositions[keyCode] && undefined !== keyPositions[keyCode]) ? keyPositions[keyCode] : position;
-	var notes = queue[pos];
-	delete keyPositions[keyCode];
-	$.each(notes, function(i, note) {
-		selectedOutput.send([0x90, note.number, 0]);
-	});
+	if (keyCode > 0 && keyCode < 4) {
+		// mouse: since it doesn't play well with keyboard, silence everything
+		var allActiveNotes = [];
+		$.each(_.values(keyPositions), function(i, p) {
+			allActiveNotes.push.apply(allActiveNotes, _.pluck(queue[p], 'number'));
+		});
+
+		$.each(allActiveNotes, function(i, note) {
+			selectedOutput.send([0x90, note, 0]);
+		});
+		keyPositions = {};
+	} else {
+		var pos = (null !== keyPositions[keyCode] && undefined !== keyPositions[keyCode]) ? keyPositions[keyCode] : position;
+
+		var notes = queue[pos];
+		delete keyPositions[keyCode];
+		
+		// get big list of all notes in keyPositions still, don't turn any of those off
+		var stillActiveNotes = [];
+		$.each(_.values(keyPositions), function(i, p) {
+			stillActiveNotes.push.apply(stillActiveNotes, _.pluck(queue[p], 'number'));
+		});
+
+		$.each(notes, function(i, note) {
+			if (!_.contains(stillActiveNotes, note.number)) selectedOutput.send([0x90, note.number, 0]);
+		});
+	}
 }
 
 // It may be best at times to completely redraw the queue such as after deleting rows
