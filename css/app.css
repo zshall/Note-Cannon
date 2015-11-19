@@ -134,3 +134,7 @@ tr.active {
 #lastQueue td {
 	padding: 10px;
 }
+
+.remove-sequence {
+	cursor: pointer;
+}

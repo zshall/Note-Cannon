@@ -98,10 +98,11 @@ $(document).ready(function() {
 	$('#btnAddLast').click(function() { addToQueue(true); });
 	$('#btnPreview, #btnAddLast').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
 
-	key('command+z, ctrl+z', function() {
-		removeFromQueue();
-		// TODO: when we add to the queue, we should be able to append at certain parts
+	$(document).on('click', '.remove-sequence', function() {
+		removeFromQueue($(this).data('position'));
 	});
+
+	key('command+z, ctrl+z', removeFromQueue);
 
 	window.beforeunload = function() {
 		stopAllOutput();
@@ -225,7 +226,8 @@ function noteOff(noteNumber, channel) {
 function addToQueue(keepQueue) {
 	if (lastQueue.length <= 0) return;
 	queue.push(lastQueue);
-	var longest = $('#queue th').length - 1;
+	var last = queue.length - 1;
+	var longest = $('#queue th').length - $('#queue th.header').length;
 	var next = $('#queue tbody tr').length + 1;
 	var toAdd = lastQueue.length - longest;
 
@@ -238,6 +240,7 @@ function addToQueue(keepQueue) {
 	}
 
 	var row = $('<tr>');
+	row.append($('<td>').addClass('remove-sequence').data('position', last).text('x').attr('title', 'Remove from sequence'));
 	row.append($('<td>').text(next));
 	$.each(lastQueue, function(i, note) {
 		row.append($('<td>').text(note.number + ', ' + note.velocity));
@@ -267,13 +270,10 @@ function addToQueue(keepQueue) {
 
 // "Undo" functionality
 function removeFromQueue(pos) {
-	// TODO: a button for this needs to be on the main screen
-	// TODO: UI overhaul
-	if (!pos) pos = queue.length - 1;
-	queue.splice(pos);
-
+	if (pos === null || pos === undefined) pos = queue.length - 1;
+	queue.splice(pos, 1);
+	redrawQueue();
 	// TODO: remove empty columns
-	$('#queue tbody tr:last-child').remove();
 }
 
 // Resets the cannon
@@ -283,7 +283,7 @@ function clearQueue() {
 	previewQueue = [];
 	position = -1;
 	canAdvance = true;
-	$('#queue thead th:not(#counter), #queue tbody tr').remove();
+	$('#queue thead th:not(.header), #queue tbody tr').remove();
 }
 
 // Advances the cannon's position by one and sends out the start of a note
@@ -319,6 +319,39 @@ function finishAdvanceQueue() {
 		selectedOutput.send([0x90, note.number, 0]);
 	});
 	canAdvance = true;
+}
+
+// It may be best at times to completely redraw the queue such as after deleting rows
+function redrawQueue() {
+	var longest = 0;
+	var toAdd = $('#queue th').length - $('#queue th.header').length;
+
+	// clear queue table
+	$('#queue thead th:not(.header), #queue tbody tr').remove();
+
+	// fill out the rest of the headers with <th>'s
+	for (var i = 1; i < toAdd + 1; i++) {
+		$('#queue thead tr').append($('<th>').text('Note #' + (longest + i)));
+		$('#queue tbody tr').append($('<td>'));
+	}
+
+	$.each(queue, function(c, sequence) {
+		var row = $('<tr>');
+		row.append($('<td>').addClass('remove-sequence').data('position', c).text('x').attr('title', 'Remove from sequence'));
+		row.append($('<td>').text(c + 1));
+		$.each(sequence, function(i, note) {
+			row.append($('<td>').text(note.number + ', ' + note.velocity));
+		});
+
+		// fill out the rest of the row with empty <td>'s if necessary
+		if (toAdd * -1 > 0) {
+			for (var i = 0; i < toAdd * -1; i++) {
+				row.append($('<td>'));
+			}
+		}
+
+		$('#queue tbody').append(row);
+	});
 }
 
 // Preview notes
