@@ -149,7 +149,7 @@ function midiMessageReceived(ev) {
 
     // MIDI noteon with velocity = 0 is the same as noteoff
     if (cmd === 8 || ((cmd === 9) && (velocity === 0))) { // noteoff
-      noteOff(noteNumber);
+      noteOff(noteNumber, channel);
     } else if (cmd === 9) { // note on
       noteOn(noteNumber, velocity, channel);
     } else if (cmd === 11) { // controller message
@@ -160,7 +160,7 @@ function midiMessageReceived(ev) {
 // When a note is ON, this function will execute
 function noteOn(noteNumber, velocity, channel) {
 	// Log the note
-	$('#monitor').append($('<div>').addClass('note-on').text('ON: ' + noteNumber + ',' + velocity + ', CH: ' + channel));
+	logNote(true, noteNumber, velocity, channel);
 
 	if ($('#cbUseChannelFiltering').prop('checked') && channel.toString() !== $('#selInputChannel :selected').val()) return;
 
@@ -187,9 +187,9 @@ function noteOn(noteNumber, velocity, channel) {
 }
 
 // When a note is OFF, this function will execute
-function noteOff(noteNumber) {
+function noteOff(noteNumber, channel) {
 	// Log the note
-	$('#monitor').append($('<div>').addClass('note-off').text("OFF: " + noteNumber));
+	logNote(false, noteNumber, 0, channel);
 
 	// Remove it from the preview queue
 	previewQueue = _.filter(previewQueue, function(note) {
@@ -250,9 +250,7 @@ function addToQueue(keepQueue) {
 	// scroll to note when added
 	var queueBox = $('#box');
 	var scrollTo = $('#queue tbody tr:last-child');
-	queueBox.animate({
-		scrollTop: scrollTo.offset().top - queueBox.offset().top + queueBox.scrollTop()
-	}, 10);
+	queueBox.scrollTop(scrollTo.offset().top - queueBox.offset().top + queueBox.scrollTop());
 }
 
 // "Undo" functionality
@@ -292,9 +290,7 @@ function advanceQueue(over) {
 	// scroll to note being played
 	var queueBox = $('#box');
 	var scrollTo = $('#queue tbody tr.active');
-	queueBox.animate({
-    	scrollTop: scrollTo.offset().top - queueBox.offset().top + queueBox.scrollTop()
-	}, 10);
+	queueBox.scrollTop(scrollTo.offset().top - queueBox.offset().top + queueBox.scrollTop());
 
 	var notes = queue[position];
 	$.each(notes, function(i, note) {
@@ -324,4 +320,11 @@ function endPreviewNotes() {
 	$.each(lastQueue, function(i, note) {
 		selectedOutput.send([0x90, note.number, 0]);
 	});
+}
+
+// Log note to the MIDI monitor
+function logNote(pressed, noteNumber, velocity, channel) {
+	onOrOff = pressed ? 'ON: ' : 'OFF: ';
+	$('#monitor').append($('<div>').addClass('note-on').text(onOrOff + noteNumber + (pressed ? ',' + velocity : '') + ', CH: ' + channel));
+	$('#monitor').scrollTop($('#monitor')[0].scrollHeight);
 }
