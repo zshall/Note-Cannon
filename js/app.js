@@ -6,7 +6,7 @@ var queue = []; // the queue. for now we'll only support one note cannon
 var previewQueue = []; // preview queue for hearing before adding
 var lastQueue = []; // last queue for retroactively adding
 var canAdvance = true; // if a note is already being played we'll need to finish it first
-var replaceOnRest = false; // if this flag is set then clear the queue the next note played
+var replaceOnRest = true; // if this flag is set then clear the queue the next note played
 // FIXME: this doesn't work when we switch it in the middle of a mode
 // TODO: make it so that we can hold as many keys as we want (perhaps a map of each key being held)
 // TODO: allow MIDI input to be used in "performance" mode or define an octave or note range for each cannon
@@ -38,6 +38,11 @@ $(document).ready(function() {
 				selectedOutput = port;
 			}
 		});
+	});
+
+	// Listen for replace checkbox change
+	$('#cbReplaceOnRest').change(function() {
+		replaceOnRest = this.checked;
 	});
 
 	for (var i = 1; i < 17; i++) {
@@ -204,6 +209,7 @@ function noteOff(noteNumber, channel) {
 			// If there are no notes being played right now, add the last played notes to the queue
 			addToQueue();
 		} else if ($('#cbReplaceOnRest').prop('checked')) {
+			// we need to set replaceOnRest again since the next note will be cleared out
 			replaceOnRest = true;
 		}
 	}
