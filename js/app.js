@@ -325,6 +325,6 @@ function endPreviewNotes() {
 // Log note to the MIDI monitor
 function logNote(pressed, noteNumber, velocity, channel) {
 	onOrOff = pressed ? 'ON: ' : 'OFF: ';
-	$('#monitor').append($('<div>').addClass('note-on').text(onOrOff + noteNumber + (pressed ? ',' + velocity : '') + ', CH: ' + channel));
+	$('#monitor').append($('<div>').addClass(pressed ? 'note-on' : 'note-off').text(onOrOff + noteNumber + (pressed ? ',' + velocity : '') + ', CH: ' + channel));
 	$('#monitor').scrollTop($('#monitor')[0].scrollHeight);
 }
