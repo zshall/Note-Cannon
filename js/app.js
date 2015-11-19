@@ -94,6 +94,7 @@ $(document).ready(function() {
 	});
 
 	$('#btnClear').click(clearQueue);
+	$('#btnUndo').click(removeFromQueue);
 	$('#btnAddLast').click(function() { addToQueue(true); });
 	$('#btnPreview, #btnAddLast').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
 
@@ -101,6 +102,10 @@ $(document).ready(function() {
 		removeFromQueue();
 		// TODO: when we add to the queue, we should be able to append at certain parts
 	});
+
+	window.beforeunload = function() {
+		stopAllOutput();
+	}
 });
 
 // When MIDI access is requested this function is run.
