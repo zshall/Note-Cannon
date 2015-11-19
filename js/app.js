@@ -112,15 +112,14 @@ function initMIDI(access) {
 
 // Populates select box with MIDI port list.
 function showMIDIPorts() {
-	// FIXME: Why are there duplicate ports showing up?
-	// $('#selInputs option, #selInputs option').remove();
-
 	var inputs = midiAccess.inputs;
 	var first = true;
 	inputs.forEach(function(port) {
 		if (first && !selectedInput) selectedInput = port;
 		else first = false;
-		$('#selInputs').append($('<option>').val(port.id).text(port.manufacturer + " " + port.name));
+		if (!_.contains(_.pluck($('#selInputs option'), 'value'), port.id)) {
+			$('#selInputs').append($('<option>').val(port.id).text(port.manufacturer + " " + port.name));
+		}
 	});
 
 	var outputs = midiAccess.outputs;
@@ -128,7 +127,9 @@ function showMIDIPorts() {
 	outputs.forEach(function(port) {
 		if (first && !selectedOutput) selectedOutput = port;
 		else first = false;
-		$('#selOutputs').append($('<option>').val(port.id).text(port.manufacturer + " " + port.name));
+		if (!_.contains(_.pluck($('#selOutputs option'), 'value'), port.id)) {
+			$('#selOutputs').append($('<option>').val(port.id).text(port.manufacturer + " " + port.name));
+		}
 	});
 
 	if (inputs.length === 0) alert('No inputs are available! :(');
