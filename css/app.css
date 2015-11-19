@@ -12,6 +12,11 @@ body {
 	font-family: 'Anonymous Pro';
 }
 
+p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
 #container {
 	position: absolute;
 	top: 0;
@@ -76,8 +81,8 @@ button {
 	cursor:pointer;
 	color:#ffffff;
 	font-family:Arial;
-	font-size:14px;
-	padding:10px 20px;
+	font-size:12px;
+	padding:5px 10px;
 	text-decoration:none;
 	text-shadow:0px 1px 0px #283966;
 }
@@ -90,8 +95,7 @@ button:active {
 }
 
 #actions {
-	margin-top: 20px;
-	margin-bottom: 20px;
+    line-height: 32px;
 }
 
 #txtTrigger {
@@ -112,6 +116,10 @@ table {
 
 tr, td, th {
 	border: 1px solid #566963;
+}
+
+td {
+	text-align: center;
 }
 
 tr.active {
