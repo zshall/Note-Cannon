@@ -5,9 +5,8 @@ var selectedOutput;
 var queue = []; // the queue. for now we'll only support one note cannon
 var previewQueue = []; // preview queue for hearing before adding
 var lastQueue = []; // last queue for retroactively adding
-var canAdvance = true; // if a note is already being played we'll need to finish it first
+var keyPositions = {}; // keep a dictionary of which keys held correspond to which notes
 var replaceOnRest = true; // if this flag is set then clear the queue the next note played
-// FIXME: this doesn't work when we switch it in the middle of a mode
 // TODO: make it so that we can hold as many keys as we want (perhaps a map of each key being held)
 // TODO: allow MIDI input to be used in "performance" mode or define an octave or note range for each cannon
 
@@ -57,15 +56,13 @@ $(document).ready(function() {
 
 
 	// Queue logic
-	$('#btnPlay').mousedown(function() {
-		if (!canAdvance) return;
-		else canAdvance = false;
-		advanceQueue();
+	$('#btnPlay').mousedown(function(ev) {
+		advanceQueue(ev.which);
 	});
 
-	$('#btnPlay').mouseup(function() {
+	$('#btnPlay').mouseup(function(ev) {
 		// FIXME: if both mouse and keyboard are down this may break
-		finishAdvanceQueue();
+		finishAdvanceQueue(ev.which);
 	});
 
 	$('#btnReset').click(function() {
@@ -73,23 +70,19 @@ $(document).ready(function() {
 		$('#queue tbody tr').removeClass('active');
 	})
 
-	$('#txtTrigger').keydown(function(ev) {
-		if (ev.repeat !== undefined) canAdvance = !ev.repeat;
-		if (!canAdvance) return;
-		else canAdvance = false;
-
-		advanceQueue();
+	$('#triggerZone').keydown(function(ev) {
+		advanceQueue(ev.which);
 		return false;
 	});
 
-	$('#txtTrigger').keyup(function(ev) {
+	$('#triggerZone').keyup(function(ev) {
 		// FIXME: if both mouse and keyboard are down this may break
 		// or if more than one key is down at a time
-		finishAdvanceQueue();
+		finishAdvanceQueue(ev.which);
 		return false;
 	});
 
-	$('#txtTrigger').keypress(function () {
+	$('#triggerZone').keypress(function () {
 		return false;
 	});
 
@@ -270,7 +263,7 @@ function addToQueue(keepQueue) {
 
 // "Undo" functionality
 function removeFromQueue(pos) {
-	if (pos === null || pos === undefined) pos = queue.length - 1;
+	if (null === pos || undefined === pos) pos = queue.length - 1;
 	queue.splice(pos, 1);
 	redrawQueue();
 	// TODO: remove empty columns
@@ -282,19 +275,17 @@ function clearQueue() {
 	lastQueue = [];
 	previewQueue = [];
 	position = -1;
-	canAdvance = true;
+	// TODO: stop playing all notes still playing
 	$('#queue thead th:not(.header), #queue tbody tr').remove();
 }
 
 // Advances the cannon's position by one and sends out the start of a note
-function advanceQueue(over) {
+function advanceQueue(keyCode) {
 	var longest = $('#queue tbody tr').length;
-	if (longest === 0) {
-		canAdvance = true;
-		return;
-	}
+	if ((longest === 0) || (null !== keyPositions[keyCode] && undefined !== keyPositions[keyCode])) return;
 	if (position < 0 || position === longest - 1) position = 0;
 	else position++;
+	keyPositions[keyCode] = position;
 
 	$('#queue tbody tr').removeClass('active');
 	$($('#queue tbody tr')[position]).addClass('active');
@@ -311,14 +302,15 @@ function advanceQueue(over) {
 }
 
 // Finishes advancing the cannon's position and sends the end of the note
-function finishAdvanceQueue() {
+function finishAdvanceQueue(keyCode) {
 	var longest = $('#queue tbody tr').length;
 	if (longest === 0) return;
-	var notes = queue[position];
+	var pos = (null !== keyPositions[keyCode] && undefined !== keyPositions[keyCode]) ? keyPositions[keyCode] : position;
+	var notes = queue[pos];
+	delete keyPositions[keyCode];
 	$.each(notes, function(i, note) {
 		selectedOutput.send([0x90, note.number, 0]);
 	});
-	canAdvance = true;
 }
 
 // It may be best at times to completely redraw the queue such as after deleting rows
