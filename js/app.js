@@ -8,7 +8,8 @@ var lastQueue = []; // last queue for retroactively adding
 var keyPositions = {}; // keep a dictionary of which keys held correspond to which notes
 var replaceOnRest = true; // if this flag is set then clear the queue the next note played
 // TODO: allow MIDI input to be used in "performance" mode or define an octave or note range for each cannon
-
+var arrowDown = '&#x25bc;';
+var insertPosition = -1; // the position of the next not we'll be inserting. if 0, means we'll insert at the very beginning (shifting the previous first note up to #2, etc.)
 // the position in the current queue
 var position = -1;
 
@@ -93,9 +94,13 @@ $(document).ready(function() {
 
 	key('command+z, ctrl+z', removeFromQueue);
 
-	window.beforeunload = function() {
-		stopAllOutput();
-	}
+	$(document).on('click', '.position', function() {
+		setQueuePosition(this);
+	});
+
+	// window.beforeunload = function() {
+	// 	stopAllOutput();
+	// }
 });
 
 // When MIDI access is requested this function is run.
@@ -214,35 +219,14 @@ function noteOff(noteNumber, channel) {
 // Adds a series of notes to the cannon
 function addToQueue(keepQueue) {
 	if (lastQueue.length <= 0) return;
-	queue.push(lastQueue);
+	queue.splice(insertPosition + 1, 0, lastQueue);
+	insertPosition++;
 	var last = queue.length - 1;
 	var longest = $('#queue th').length - $('#queue th.header').length;
 	var next = $('#queue tbody tr').length + 1;
 	var toAdd = lastQueue.length - longest;
 
-	// fill out the rest of the headers with <th>'s if more notes are played than the longest chord we've heard
-	if (lastQueue.length > longest) {
-		for (var i = 1; i < toAdd + 1; i++) {
-			$('#queue thead tr').append($('<th>').text('Note #' + (longest + i)));
-			$('#queue tbody tr').append($('<td>'));
-		}
-	}
-
-	var row = $('<tr>');
-	row.append($('<td>').addClass('remove-sequence').data('position', last).text('x').attr('title', 'Remove from sequence'));
-	row.append($('<td>').text(next));
-	$.each(lastQueue, function(i, note) {
-		row.append($('<td>').text(note.number + ', ' + note.velocity));
-	});
-
-	// fill out the rest of the row with empty <td>'s if necessary
-	if (toAdd * -1 > 0) {
-		for (var i = 0; i < toAdd * -1; i++) {
-			row.append($('<td>'));
-		}
-	}
-
-	$('#queue tbody').append(row);
+	redrawQueue();
 
 	// unless flag is set, remove the current queue
 	if (!keepQueue) {
@@ -259,10 +243,12 @@ function addToQueue(keepQueue) {
 
 // "Undo" functionality
 function removeFromQueue(pos) {
-	if (null === pos || undefined === pos) pos = queue.length - 1;
+	if (null === pos || undefined === pos || typeof pos !== 'number') {
+		pos = insertPosition;
+		if (insertPosition - 1 >= -1) insertPosition--;
+	}
 	queue.splice(pos, 1);
 	redrawQueue();
-	// TODO: remove empty columns
 }
 
 // Resets the cannon
@@ -270,6 +256,7 @@ function clearQueue() {
 	queue = [];
 	lastQueue = [];
 	previewQueue = [];
+	insertPosition = -1; // reset position when queue is cleared
 	position = -1;
 	keyPositions = {}; // ??? does this have to do with TODO below?
 	// TODO: stop playing all notes still playing
@@ -333,25 +320,39 @@ function finishAdvanceQueue(keyCode) {
 
 // It may be best at times to completely redraw the queue such as after deleting rows
 function redrawQueue() {
-	var longest = 0;
-	var toAdd = $('#queue th').length - $('#queue th.header').length;
+	var toAdd = _.max(queue, 'length').length;
+	if (toAdd === 0) insertPosition = 0; // reset position when queue is cleared
+
+	if (insertPosition !== -1) $('#queue thead .header.position').text('#');
+	else $('#queue thead .header.position').html(arrowDown + ' ' + '#');
 
 	// clear queue table
 	$('#queue thead th:not(.header), #queue tbody tr').remove();
 
 	// fill out the rest of the headers with <th>'s
 	for (var i = 1; i < toAdd + 1; i++) {
-		$('#queue thead tr').append($('<th>').text('Note #' + (longest + i)));
+		$('#queue thead tr').append($('<th>').text('Note #' + i));
 		$('#queue tbody tr').append($('<td>'));
 	}
 
 	$.each(queue, function(c, sequence) {
 		var row = $('<tr>');
-		row.append($('<td>').addClass('remove-sequence').data('position', c).text('x').attr('title', 'Remove from sequence'));
-		row.append($('<td>').text(c + 1));
-		$.each(sequence, function(i, note) {
-			row.append($('<td>').text(note.number + ', ' + note.velocity));
-		});
+		row.append($('<td>')
+			.addClass('remove-sequence')
+			.data('position', c)
+			.attr('title', 'Remove from sequence')
+			.text('x'));
+		row.append($('<td>')
+			.addClass('position')
+			.data('position', c)
+			.attr('title', 'Insert notes here')
+			.html((insertPosition === c ? arrowDown + ' ' : '') + (c + 1)));
+
+		for (var i = 0; i < toAdd; i++) {
+			var note = sequence[i];
+			if (!note) row.append($('<td>'));
+			else row.append($('<td>').text(note.number + ', ' + note.velocity));
+		};
 
 		// fill out the rest of the row with empty <td>'s if necessary
 		if (toAdd * -1 > 0) {
@@ -362,6 +363,11 @@ function redrawQueue() {
 
 		$('#queue tbody').append(row);
 	});
+}
+
+function setQueuePosition(element) {
+	insertPosition = $(element).data('position');
+	redrawQueue();
 }
 
 // Preview notes
