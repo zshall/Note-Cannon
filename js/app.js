@@ -243,10 +243,9 @@ function addToQueue(keepQueue) {
 
 // "Undo" functionality
 function removeFromQueue(pos) {
-	if (null === pos || undefined === pos) pos = queue.length - 1;
+	if (null === pos || undefined === pos || typeof pos !== 'number') pos = queue.length - 1;
 	queue.splice(pos, 1);
 	redrawQueue();
-	// TODO: remove empty columns
 }
 
 // Resets the cannon
