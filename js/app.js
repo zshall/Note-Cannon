@@ -9,7 +9,7 @@ var keyPositions = {}; // keep a dictionary of which keys held correspond to whi
 var replaceOnRest = true; // if this flag is set then clear the queue the next note played
 // TODO: allow MIDI input to be used in "performance" mode or define an octave or note range for each cannon
 var arrowDown = '&#x25bc;';
-var insertPosition = 0; // the position of the next not we'll be inserting. if 0, means we'll insert at the very beginning (shifting the previous first note up to #2, etc.)
+var insertPosition = -1; // the position of the next not we'll be inserting. if 0, means we'll insert at the very beginning (shifting the previous first note up to #2, etc.)
 // the position in the current queue
 var position = -1;
 
@@ -243,7 +243,10 @@ function addToQueue(keepQueue) {
 
 // "Undo" functionality
 function removeFromQueue(pos) {
-	if (null === pos || undefined === pos || typeof pos !== 'number') pos = queue.length - 1;
+	if (null === pos || undefined === pos || typeof pos !== 'number') {
+		pos = insertPosition;
+		if (insertPosition - 1 >= -1) insertPosition--;
+	}
 	queue.splice(pos, 1);
 	redrawQueue();
 }
@@ -253,7 +256,7 @@ function clearQueue() {
 	queue = [];
 	lastQueue = [];
 	previewQueue = [];
-	insertPosition = 0; // reset position when queue is cleared
+	insertPosition = -1; // reset position when queue is cleared
 	position = -1;
 	keyPositions = {}; // ??? does this have to do with TODO below?
 	// TODO: stop playing all notes still playing
