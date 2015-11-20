@@ -328,7 +328,7 @@ function redrawQueue() {
 
 	// fill out the rest of the headers with <th>'s
 	for (var i = 1; i < toAdd + 1; i++) {
-		$('#queue thead tr').append($('<th>').text('Note #' + (i)));
+		$('#queue thead tr').append($('<th>').text('Note #' + i));
 		$('#queue tbody tr').append($('<td>'));
 	}
 
