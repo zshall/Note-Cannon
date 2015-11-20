@@ -39,9 +39,20 @@ $(document).ready(function() {
 		});
 	});
 
+	// Disable replace checkbox if eager input on
+	$('#cbEagerInput').change(function() {
+		if (this.checked) $('#cbReplaceOnRest').prop('disabled', true);
+		else $('#cbReplaceOnRest').prop('disabled', false);
+	})
 	// Listen for replace checkbox change
 	$('#cbReplaceOnRest').change(function() {
 		replaceOnRest = this.checked;
+	});
+
+	// MIDI channel selector disabled if channel filtering is off
+	$('#cbUseChannelFiltering').change(function() {
+		if (this.checked) $('#selInputChannel').prop('disabled', false);
+		else $('#selInputChannel').prop('disabled', true);
 	});
 
 	for (var i = 1; i < 17; i++) {
@@ -84,6 +95,7 @@ $(document).ready(function() {
 	});
 
 	$('#btnClear').click(clearQueue);
+	$('#btnClearLast').click(clearLastQueue);
 	$('#btnUndo').click(removeFromQueue);
 	$('#btnAddLast').click(function() { addToQueue(true); });
 	$('#btnPreview, #btnAddLast').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
@@ -229,11 +241,7 @@ function addToQueue(keepQueue) {
 	redrawQueue();
 
 	// unless flag is set, remove the current queue
-	if (!keepQueue) {
-		$('#lastQueue tr td').remove();
-		$('#lastQueue tr').append($('<td>').text('None'));
-		lastQueue = [];
-	}
+	if (!keepQueue) clearLastQueue();
 
 	// scroll to note when added
 	var queueBox = $('#box');
@@ -381,6 +389,13 @@ function endPreviewNotes() {
 	$.each(lastQueue, function(i, note) {
 		selectedOutput.send([0x90, note.number, 0]);
 	});
+}
+
+// Remove notes from the preview queue
+function clearLastQueue() {
+	$('#lastQueue tr td').remove();
+	$('#lastQueue tr').append($('<td>').text('None'));
+	lastQueue = [];
 }
 
 // Log note to the MIDI monitor
