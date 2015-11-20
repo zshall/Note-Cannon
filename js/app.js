@@ -322,6 +322,7 @@ function redrawQueue() {
 	if (toAdd === 0) insertPosition = 0; // reset position when queue is cleared
 
 	if (insertPosition !== -1) $('#queue thead .header.position').text('#');
+	else $('#queue thead .header.position').html(arrowDown + ' ' + '#');
 
 	// clear queue table
 	$('#queue thead th:not(.header), #queue tbody tr').remove();
@@ -364,8 +365,6 @@ function redrawQueue() {
 
 function setQueuePosition(element) {
 	insertPosition = $(element).data('position');
-	if (insertPosition === -1) $('.header.position').html(arrowDown + ' ' + '#');
-	else $('.header.position').text('#');
 	redrawQueue();
 }
 
