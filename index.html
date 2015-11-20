@@ -16,15 +16,15 @@
 <p>
 	MIDI Input: <select id="selInputs"></select>
 	<input type="checkbox" id="cbEagerInput" checked /> Eager Input
-	<input type="checkbox" id="cbReplaceOnRest" checked /> Replace all last notes on rest
+	<input type="checkbox" id="cbReplaceOnRest" checked disabled /> Replace all last notes on rest
 </p>
 <p>
 	MIDI Output: <select id="selOutputs"></select>
 	<input type="checkbox" id="cbFixedVelocity" /> Fixed output velocity
 </p>
 <p>
-	MIDI Input Channel: <select id="selInputChannel"></select>
-	<!--  MIDI Output Channel: <select id="selOutputChannel"></select>  -->
+	MIDI Input Channel: <select id="selInputChannel" disabled=""></select>
+	<!--  MIDI Output Channel: <select id="selOutputChannel" disabled></select>  -->
 	<input id="cbUseChannelFiltering" type="checkbox" /> Use channel filter
 </p>
 <p>
@@ -33,10 +33,11 @@
 
 <div id="actions">
 	<button id="btnClear" class="btn-red">Reset</button>
-	<button id="btnUndo" class="btn-red">Remove Last Note(s)</button>
+	<button id="btnUndo" class="btn-red">Delete Note(s) at Arrow</button>
 	<button id="btnPreview">Preview Last Note(s)</button>
+	<button id="btnClearLast">Clear Last Note(s)</button>
 	<button id="btnAddLast">Add Last Note(s)</button>
-	<button id="btnReset">Reset Queue Position</button>
+	<button id="btnReset" class="btn-green">Reset Queue Position</button>
 	<button id="btnPlay" class="btn-green">Play (Tap Melody)</button>
 </div>
 
