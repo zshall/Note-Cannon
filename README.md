@@ -1,6 +1,8 @@
 # Note Cannon
 Load and fire off a sequence of MIDI notes
 
+[Live site](http://zshall.github.io/Note-Cannon/)
+
 This is a work in progress and will change as I go along. The basic idea of this program is to make melodic sequencing easier by combining the precision of a step sequencer with the complexities of musical timing. Most good melodies aren't just one unbroken string of equally sized and toned notes, and rather contain rests, held notes, and complex melodies that are difficult to play if you're not a keyboard player. I'm not a keyboard player, and I wanted a way to make melodies as easy as drum sequencing (which can be equated more to steps on a grid than a piano or guitar).
 
 This program lets you input, step by step, a sequence of notes and chords from a MIDI input device. They will be stored in a queue and will be able to be played back at a variable time. Whenever you press the "Play" button or tap on the keyboard, the next note in the queue will be played through the selected MIDI output device.
