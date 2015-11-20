@@ -135,6 +135,6 @@ tr.active {
 	padding: 10px;
 }
 
-.remove-sequence {
+.remove-sequence, .position {
 	cursor: pointer;
 }
