@@ -1,11 +1,27 @@
+<!doctype html>
+<!--
+  Copyright 2015 Zach Hall
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+     http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
 <html>
 <head>
-<title>Note Cannon</title>
-<link href="css/app.css" rel="stylesheet" />
-<script src="js/jquery-2.1.4.min.js"></script>
-<script src="js/underscore-min.js"></script>
-<script src="js/keymaster.js"></script>
-<script src="js/app.js"></script>
+	<title>Note Cannon</title>
+	<link href="css/app.css" rel="stylesheet" />
+	<script src="js/jquery-2.1.4.min.js"></script>
+	<script src="js/underscore-min.js"></script>
+	<script src="js/keymaster.js"></script>
+	<script src="js/app.js"></script>
 </head>
 <body>
 
@@ -13,49 +29,49 @@
 
 <div id="container">
 
-<p>
-	MIDI Input: <select id="selInputs"></select>
-	<input type="checkbox" id="cbEagerInput" checked /> Eager Input
-	<input type="checkbox" id="cbReplaceOnRest" checked disabled /> Replace all last notes on rest
-</p>
-<p>
-	MIDI Output: <select id="selOutputs"></select>
-	<input type="checkbox" id="cbFixedVelocity" /> Fixed output velocity
-</p>
-<p>
-	MIDI Input Channel: <select id="selInputChannel" disabled=""></select>
-	<!--  MIDI Output Channel: <select id="selOutputChannel" disabled></select>  -->
-	<input id="cbUseChannelFiltering" type="checkbox" /> Use channel filter
-</p>
-<p>
-	<div id="triggerZone" tabindex="0">Click here and press keys with the keyboard to trigger notes.</div>
-</p>
+	<p>
+		MIDI Input: <select id="selInputs"></select>
+		<input type="checkbox" id="cbEagerInput" checked /> Eager Input
+		<input type="checkbox" id="cbReplaceOnRest" checked disabled /> Replace all last notes on rest
+	</p>
+	<p>
+		MIDI Output: <select id="selOutputs"></select>
+		<input type="checkbox" id="cbFixedVelocity" /> Fixed output velocity
+	</p>
+	<p>
+		MIDI Input Channel: <select id="selInputChannel" disabled=""></select>
+		<!--  MIDI Output Channel: <select id="selOutputChannel" disabled></select>  -->
+		<input id="cbUseChannelFiltering" type="checkbox" /> Use channel filter
+	</p>
+	<p>
+		<div id="triggerZone" tabindex="0">Click here and press keys with the keyboard to trigger notes.</div>
+	</p>
 
-<div id="actions">
-	<button id="btnClear" class="btn-red">Reset</button>
-	<button id="btnUndo" class="btn-red">Delete Note(s) at Arrow</button>
-	<button id="btnPreview">Preview Last Note(s)</button>
-	<button id="btnClearLast">Clear Last Note(s)</button>
-	<button id="btnAddLast">Add Last Note(s)</button>
-	<button id="btnReset" class="btn-green">Reset Queue Position</button>
-	<button id="btnPlay" class="btn-green">Play (Tap Melody)</button>
-</div>
+	<div id="actions">
+		<button id="btnClear" class="btn-red">Reset</button>
+		<button id="btnUndo" class="btn-red">Delete Note(s) at Arrow</button>
+		<button id="btnPreview">Preview Last Note(s)</button>
+		<button id="btnClearLast">Clear Last Note(s)</button>
+		<button id="btnAddLast">Add Last Note(s)</button>
+		<button id="btnReset" class="btn-green">Reset Queue Position</button>
+		<button id="btnPlay" class="btn-green">Play (Tap Melody)</button>
+	</div>
 
-<p>Last Played Notes:</p>
-<table id="lastQueue"><tr><td>None</td></tr></table>
+	<p>Last Played Notes:</p>
+	<table id="lastQueue"><tr><td>None</td></tr></table>
 
-<p>Cannon:</p>
+	<p>Cannon:</p>
 
-<div id="box">
-	<table id="queue">
-		<thead>
-			<th style="width: 10px" class="header"><!-- maybe put clear button here instead? --></th>
-			<th style="width: 25px" class="header position" data-position="-1">#</th>
-		</thead>
-		<tbody>
-		</tbody>
-	</table>
-</div>
+	<div id="box">
+		<table id="queue">
+			<thead>
+				<th style="width: 10px" class="header"><!-- maybe put clear button here instead? --></th>
+				<th style="width: 25px" class="header position" data-position="-1">#</th>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
 
 </div>
 
