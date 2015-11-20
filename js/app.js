@@ -13,6 +13,7 @@ var insertPosition = -1; // the position of the next not we'll be inserting. if 
 // the position in the current queue
 var position = -1;
 
+// Page initialization
 $(document).ready(function() {
 	if (navigator.requestMIDIAccess !== undefined) {
 		navigator.requestMIDIAccess().then(initMIDI, alert);
@@ -107,7 +108,7 @@ $(document).ready(function() {
 	key('command+z, ctrl+z', removeFromQueue);
 
 	$(document).on('click', '.position', function() {
-		setQueuePosition(this);
+		setQueueInsertionPoint(this);
 	});
 
 	// window.beforeunload = function() {
@@ -373,7 +374,8 @@ function redrawQueue() {
 	});
 }
 
-function setQueuePosition(element) {
+// Sets the insertion point for the next notes in the queue
+function setQueueInsertionPoint(element) {
 	insertPosition = $(element).data('position');
 	redrawQueue();
 }
