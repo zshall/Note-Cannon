@@ -25,6 +25,16 @@ p {
 	padding-left: 1%;
 }
 
+#github {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	background: #ddd;
+	font-size: 12px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
 /* MIDI Monitor */
 #monitor {
 	position: absolute;
