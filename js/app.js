@@ -23,6 +23,8 @@ var previewQueue = []; // preview queue for hearing before adding
 var lastQueue = []; // last queue for retroactively adding
 var keyPositions = {}; // keep a dictionary of which keys held correspond to which notes
 var replaceOnRest = true; // if this flag is set then clear the queue the next note played
+var inputChannelFilter = -1; // if this value is greater than 0, only notes from that input channel will register
+var performanceChannel = -1; // if this value is greater than 0, advance the queue when any note on that channel is played instead of adding a note to the queue
 // TODO: allow MIDI input to be used in "performance" mode or define an octave or note range for each cannon
 var arrowDown = '&#x25bc;';
 var insertPosition = -1; // the position of the next not we'll be inserting. if 0, means we'll insert at the very beginning (shifting the previous first note up to #2, etc.)
@@ -36,6 +38,7 @@ var midiControls = {
 	2: 'ERASE',
 	10:'UNDO',
 	//11:'STEPUP',
+	3: 'PERFORMCHAN', // Set performance channel
 	12:'INPUTCHAN', // Set input channel filter
 	5: 'INSERT', // Note controls
 	6: 'CLEAR',
@@ -82,16 +85,19 @@ $(document).ready(function() {
 		replaceOnRest = this.checked;
 	});
 
-	// MIDI channel selector disabled if channel filtering is off
-	$('#cbUseChannelFiltering').change(function() {
-		if (this.checked) $('#selInputChannel').prop('disabled', false);
-		else $('#selInputChannel').prop('disabled', true);
+	$('#selInputChannel, #selPerformanceChannel').append($('<option>').val("-1").text("Off"));
+	for (var i = 0; i < 16; i++) {
+		$('#selInputChannel').append($('<option>').val(i).text(i+1));
+		$('#selPerformanceChannel').append($('<option>').val(i).text(i+1));
+	};
+
+	$('#selInputChannel').change(function() {
+		inputChannelFilter = parseInt($('#selInputChannel :selected').val());
 	});
 
-	for (var i = 1; i < 17; i++) {
-		$('#selInputChannel').append($('<option>').val(i).text(i));
-		// $('#selOutputChannel').append($('<option>').val(i).text(i));
-	};
+	$('#selPerformanceChannel').change(function() {
+		performanceChannel = parseInt($('#selPerformanceChannel :selected').val());
+	});
 
 	// Don't allow the space key to trigger buttons
 	$('button').focus(function() {
@@ -108,10 +114,7 @@ $(document).ready(function() {
 		finishAdvanceQueue(ev.which);
 	});
 
-	$('#btnReset').click(function() {
-		position = -1;
-		$('#queue tbody tr').removeClass('active');
-	})
+	$('#btnReset').click(resetQueue);
 
 	$('#triggerZone').keydown(function(ev) {
 		advanceQueue(ev.which);
@@ -213,28 +216,34 @@ function noteOn(noteNumber, velocity, channel) {
 	// Log the note
 	logNote(true, noteNumber, velocity, channel + 1);
 
-	if ($('#cbUseChannelFiltering').prop('checked') && channel.toString() !== $('#selInputChannel :selected').val()) return;
+	if (inputChannelFilter >= 0 && channel !== inputChannelFilter) return;
 
 	var note = {number: noteNumber, velocity: velocity};
 
-	// Clear the queue if we're replacing notes on rest
-	if (replaceOnRest) {
-		lastQueue = [];
-		replaceOnRest = false;
+	if (channel === performanceChannel) {
+		// Fire the next note in the queue
+		advanceQueue('MIDI' + noteNumber);
+	} else {
+		// Add the note to the performance queue
+		// Clear the queue if we're replacing notes on rest
+		if (replaceOnRest) {
+			lastQueue = [];
+			replaceOnRest = false;
+		}
+
+		// If the note is already in the queue (same number) don't include it
+		if (!_.findWhere(lastQueue, {number: note.number})) lastQueue.push(note);
+
+		// Preview the note
+		previewQueue.push(note);
+		if (selectedOutput) selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+
+		// Display it on the output
+		$('#lastQueue tr td').remove();
+		$.each(lastQueue, function(i, _note) {
+			$('#lastQueue tr').append($('<td>').text(_note.number + ', ' + _note.velocity));
+		});
 	}
-
-	// If the note is already in the queue (same number) don't include it
-	if (!_.findWhere(lastQueue, {number: note.number})) lastQueue.push(note);
-
-	// Preview the note
-	previewQueue.push(note);
-	if (selectedOutput) selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
-
-	// Display it on the output
-	$('#lastQueue tr td').remove();
-	$.each(lastQueue, function(i, _note) {
-		$('#lastQueue tr').append($('<td>').text(_note.number + ', ' + _note.velocity));
-	});
 }
 
 // When a note is OFF, this function will execute
@@ -242,21 +251,26 @@ function noteOff(noteNumber, channel) {
 	// Log the note
 	logNote(false, noteNumber, 0, channel + 1);
 
-	// Remove it from the preview queue
-	previewQueue = _.filter(previewQueue, function(note) {
-		return note.number !== noteNumber;
-	});
+	if (channel === performanceChannel) {
+		// End the last performed note on this key
+		finishAdvanceQueue('MIDI' + noteNumber);
+	} else {
+		// Remove it from the preview queue
+		previewQueue = _.filter(previewQueue, function(note) {
+			return note.number !== noteNumber;
+		});
 
-	if (selectedOutput) selectedOutput.send([0x90, noteNumber, 0]);
+		if (selectedOutput) selectedOutput.send([0x90, noteNumber, 0]);
 
-	if (previewQueue.length === 0) {
-		// Shut off the envelope
-		if ($('#cbEagerInput').prop('checked')) {
-			// If there are no notes being played right now, add the last played notes to the queue
-			addToQueue();
-		} else if ($('#cbReplaceOnRest').prop('checked')) {
-			// we need to set replaceOnRest again since the next note will be cleared out
-			replaceOnRest = true;
+		if (previewQueue.length === 0) {
+			// Shut off the envelope
+			if ($('#cbEagerInput').prop('checked')) {
+				// If there are no notes being played right now, add the last played notes to the queue
+				addToQueue();
+			} else if ($('#cbReplaceOnRest').prop('checked')) {
+				// we need to set replaceOnRest again since the next note will be cleared out
+				replaceOnRest = true;
+			}
 		}
 	}
 }
@@ -278,6 +292,9 @@ function controller(noteNumber, velocity) {
 		case 'STEPDOWN':
 		//case 'STEPUP':
 			removeFromQueue();
+			break;
+		case 'PERFORMCHAN':
+			$('#selPerformanceChannel').val(velocity - 1).trigger('change');
 			break;
 		case 'INPUTCHAN':
 			$('#selInputChannel').val(velocity - 1).trigger('change');
