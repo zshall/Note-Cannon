@@ -29,6 +29,22 @@ var insertPosition = -1; // the position of the next not we'll be inserting. if 
 // the position in the current queue
 var position = -1;
 
+// MIDI control mapping
+var midiControls = {
+	0: 'PLAY', // Queue operations
+	1: 'RESTART',
+	2: 'ERASE',
+	10:'UNDO',
+	//11:'STEPUP',
+	12:'INPUTCHAN', // Set input channel filter
+	5: 'INSERT', // Note controls
+	6: 'CLEAR',
+	7: 'EAGER',
+	8: 'REPLACE',
+	9: 'FIXVEL', // Output controls
+	4: 'PREVIEW'
+};
+
 // Page initialization
 $(document).ready(function() {
 	if (navigator.requestMIDIAccess !== undefined) {
@@ -188,7 +204,7 @@ function midiMessageReceived(ev) {
     } else if (cmd === 9) { // note on
       noteOn(noteNumber, velocity, channel);
     } else if (cmd === 11) { // controller message
-      //controller(noteNumber, velocity);
+      controller(noteNumber, velocity);
     }
 }
 
@@ -242,6 +258,53 @@ function noteOff(noteNumber, channel) {
 			// we need to set replaceOnRest again since the next note will be cleared out
 			replaceOnRest = true;
 		}
+	}
+}
+
+// Allows control from a MIDI controller
+function controller(noteNumber, velocity) {
+	var on = velocity !== 0;
+	switch(midiControls[noteNumber]) {
+		case 'PLAY':
+			if (on) advanceQueue('MIDIPLAY');
+			else finishAdvanceQueue('MIDIPLAY');
+			break;
+		case 'RESTART':
+			resetQueue();
+			break;
+		case 'ERASE':
+			clearQueue();
+			break;
+		case 'STEPDOWN':
+		//case 'STEPUP':
+			removeFromQueue();
+			break;
+		case 'INPUTCHAN':
+			$('#selInputChannel').val(velocity - 1).trigger('change');
+			break;
+		case 'INSERT':
+			if (on) {
+				startPreviewNotes();
+				addToQueue(true);
+			}
+			else endPreviewNotes();
+			break;
+		case 'CLEAR':
+			clearLastQueue();
+			break;
+		case 'EAGER':
+			$('#cbEagerInput').prop('checked', on).trigger('change');
+			break;
+		case 'REPLACE':
+			$('#cbReplaceOnRest').prop('checked', on).trigger('change');
+			break;
+		case 'FIXVEL':
+			$('#cbFixedVelocity').prop('checked', on).trigger('change');
+			break;
+		case 'PREVIEW':
+			if (on) startPreviewNotes();
+			else endPreviewNotes();
+			break;
 	}
 }
 
@@ -341,6 +404,12 @@ function finishAdvanceQueue(keyCode) {
 			if (!_.contains(stillActiveNotes, note.number)) selectedOutput.send([0x90, note.number, 0]);
 		});
 	}
+}
+
+// Resets the position of the queue
+function resetQueue() {
+	position = -1;
+	$('#queue tbody tr').removeClass('active');
 }
 
 // It may be best at times to completely redraw the queue such as after deleting rows
