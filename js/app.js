@@ -195,7 +195,7 @@ function midiMessageReceived(ev) {
 // When a note is ON, this function will execute
 function noteOn(noteNumber, velocity, channel) {
 	// Log the note
-	logNote(true, noteNumber, velocity, channel);
+	logNote(true, noteNumber, velocity, channel + 1);
 
 	if ($('#cbUseChannelFiltering').prop('checked') && channel.toString() !== $('#selInputChannel :selected').val()) return;
 
@@ -224,7 +224,7 @@ function noteOn(noteNumber, velocity, channel) {
 // When a note is OFF, this function will execute
 function noteOff(noteNumber, channel) {
 	// Log the note
-	logNote(false, noteNumber, 0, channel);
+	logNote(false, noteNumber, 0, channel + 1);
 
 	// Remove it from the preview queue
 	previewQueue = _.filter(previewQueue, function(note) {
@@ -418,6 +418,7 @@ function clearLastQueue() {
 
 // Log note to the MIDI monitor
 function logNote(pressed, noteNumber, velocity, channel) {
+	if ($('#monitor').find('div').length > 16) $('#monitor').find('div:first-child').remove();
 	onOrOff = pressed ? 'ON: ' : 'OFF: ';
 	$('#monitor').append($('<div>').addClass(pressed ? 'note-on' : 'note-off').text(onOrOff + noteNumber + (pressed ? ',' + velocity : '') + ', CH: ' + channel));
 	$('#monitor').scrollTop($('#monitor')[0].scrollHeight);
