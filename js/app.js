@@ -114,10 +114,7 @@ $(document).ready(function() {
 		finishAdvanceQueue(ev.which);
 	});
 
-	$('#btnReset').click(function() {
-		position = -1;
-		$('#queue tbody tr').removeClass('active');
-	})
+	$('#btnReset').click(resetQueue);
 
 	$('#triggerZone').keydown(function(ev) {
 		advanceQueue(ev.which);
