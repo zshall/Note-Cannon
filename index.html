@@ -21,6 +21,7 @@
 	<script src="js/jquery-2.1.4.min.js"></script>
 	<script src="js/underscore-min.js"></script>
 	<script src="js/keymaster.js"></script>
+	<script src="lib/qwerty-hancock.min.js"></script>
 	<script src="js/app.js"></script>
 </head>
 <body>
@@ -58,6 +59,15 @@
 
 	<p>Last Played Notes:</p>
 	<table id="lastQueue"><tr><td>None</td></tr></table>
+
+	<div id="virtualInput">
+		<p>
+			<button id="btnOctaveDown" class="tooltip" title="Octave Down"><i class="fa fa-arrow-left"></i></button>
+			<button id="btnOctaveUp" class="tooltip" title="Octave Up"><i class="fa fa-arrow-right"></i></button>
+			Current octave: <span id="octave">3</span>
+		</p>
+		<div id="keyboard"></div>
+	</div>
 
 	<p>Cannon:</p>
 

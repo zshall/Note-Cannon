@@ -28,8 +28,19 @@ var performanceChannel = -1; // if this value is greater than 0, advance the que
 // TODO: allow MIDI input to be used in "performance" mode or define an octave or note range for each cannon
 var arrowDown = '&#x25bc;';
 var insertPosition = -1; // the position of the next not we'll be inserting. if 0, means we'll insert at the very beginning (shifting the previous first note up to #2, etc.)
-// the position in the current queue
-var position = -1;
+var position = -1; // the position in the current queue
+var keyboard; // virtual MIDI keyboard
+var keyboardOctave = 3, keyboardStartNote = 'C'; // to shift up and down octaves
+var keyboardSettings = { // for quick reinitialization of the keyboard
+	id: 'keyboard',
+	width: 400,
+	height: 100,
+	octaves: 2,
+	startNote: 'C3',
+	whiteNotesColour: 'white',
+	blackNotesColour: 'black',
+	hoverColour: '#f3e939'
+};
 
 // MIDI control mapping
 var midiControls = {
@@ -101,8 +112,8 @@ $(document).ready(function() {
 
 	// Don't allow the space key to trigger buttons
 	$('button').focus(function() {
-        this.blur();
-    });
+		this.blur();
+	});
 
 
 	// Queue logic
@@ -144,6 +155,32 @@ $(document).ready(function() {
 
 	$(document).on('click', '.position', function() {
 		setQueueInsertionPoint(this);
+	});
+
+	// virtual MIDI keyboard
+	keyboard = new QwertyHancock(keyboardSettings);
+
+	keyboard.keyDown = function (note, frequency) {
+		noteOn(MIDIUtils.noteNameToNoteNumber(note), 127, 1);
+	};
+
+	keyboard.keyUp = function (note, frequency) {
+		noteOff(MIDIUtils.noteNameToNoteNumber(note), 1);
+	};
+
+	key('q', function() { reinitializeKeyboard(--keyboardOctave); });
+	key('[', function() { reinitializeKeyboard(++keyboardOctave); });
+
+	$('#btnOctaveDown').click(function() {
+		reinitializeKeyboard(--keyboardOctave);
+	});
+
+	$('#btnOctaveUp').click(function() {
+		reinitializeKeyboard(++keyboardOctave);
+	});
+
+	$('#btnShowKeyboard').click(function () {
+		$('#virtualInput').slideToggle();
 	});
 
 	// window.beforeunload = function() {
