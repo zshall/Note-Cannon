@@ -41,6 +41,12 @@ var keyboardSettings = { // for quick reinitialization of the keyboard
 	blackNotesColour: 'black',
 	hoverColour: '#f3e939'
 };
+// software synth
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+var audioContext = new AudioContext();
+var masterGain = audioContext.createGain();
+var nodes = [];
+var swsNowPlaying = {};
 
 // MIDI control mapping
 var midiControls = {
@@ -67,6 +73,10 @@ $(document).ready(function() {
 		alert('No access to MIDI devices: browser does not support Web MIDI! :(');
 	}
 
+	swsInit();
+
+	$('.tooltip').tooltipster();
+
 	$('#selInputs').change(function() {
 		var inputs = midiAccess.inputs;
 		inputs.forEach(function(port) {
@@ -79,6 +89,7 @@ $(document).ready(function() {
 
 	$('#selOutputs').change(function() {
 		var outputs = midiAccess.outputs;
+		selectedOutput = null;
 		outputs.forEach(function(port) {
 			if (port.id === $('#selOutputs :selected').val()) {
 				selectedOutput = port;
@@ -147,6 +158,10 @@ $(document).ready(function() {
 	$('#btnAddLast').click(function() { addToQueue(true); });
 	$('#btnPreview, #btnAddLast').mousedown(startPreviewNotes).mouseup(endPreviewNotes);
 
+	key('space', function() {
+		addToQueue(true);
+	});
+
 	$(document).on('click', '.remove-sequence', function() {
 		removeFromQueue($(this).data('position'));
 	});
@@ -211,10 +226,10 @@ function showMIDIPorts() {
 	first = true;
 	outputs.forEach(function(port) {
 		if (first && !selectedOutput) selectedOutput = port;
-		else first = false;
 		if (!_.contains(_.pluck($('#selOutputs option'), 'value'), port.id)) {
-			$('#selOutputs').append($('<option>').val(port.id).text(port.manufacturer + " " + port.name));
+			$('#selOutputs').append($('<option>').val(port.id).text(port.manufacturer + " " + port.name).prop('selected', first));
 		}
+		first = false;
 	});
 
 	if (inputs.length === 0) alert('No inputs are available! :(');
@@ -232,20 +247,20 @@ function hookUpMIDI(port) {
 // Every time we receive a MIDI message, determine whether it's a note and deal with it accordingly.
 function midiMessageReceived(ev) {
 	var cmd = ev.data[0] >> 4;
-    var channel = ev.data[0] & 0xf;
-    var noteNumber = ev.data[1];
-    var velocity = 0;
-    if (ev.data.length > 2)
-    	velocity = ev.data[2];
+	var channel = ev.data[0] & 0xf;
+	var noteNumber = ev.data[1];
+	var velocity = 0;
+	if (ev.data.length > 2)
+		velocity = ev.data[2];
 
-    // MIDI noteon with velocity = 0 is the same as noteoff
-    if (cmd === 8 || ((cmd === 9) && (velocity === 0))) { // noteoff
-      noteOff(noteNumber, channel);
-    } else if (cmd === 9) { // note on
-      noteOn(noteNumber, velocity, channel);
-    } else if (cmd === 11) { // controller message
-      controller(noteNumber, velocity);
-    }
+	// MIDI noteon with velocity = 0 is the same as noteoff
+	if (cmd === 8 || ((cmd === 9) && (velocity === 0))) { // noteoff
+	  noteOff(noteNumber, channel);
+	} else if (cmd === 9) { // note on
+	  noteOn(noteNumber, velocity, channel);
+	} else if (cmd === 11) { // controller message
+	  controller(noteNumber, velocity);
+	}
 }
 
 // When a note is ON, this function will execute
@@ -274,6 +289,7 @@ function noteOn(noteNumber, velocity, channel) {
 		// Preview the note
 		previewQueue.push(note);
 		if (selectedOutput) selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+		else swsNoteOn(MIDIUtils.noteNumberToFrequency(note.number));
 
 		// Display it on the output
 		$('#lastQueue tr td').remove();
@@ -298,6 +314,7 @@ function noteOff(noteNumber, channel) {
 		});
 
 		if (selectedOutput) selectedOutput.send([0x90, noteNumber, 0]);
+		else swsNoteOff(MIDIUtils.noteNumberToFrequency(noteNumber));
 
 		if (previewQueue.length === 0) {
 			// Shut off the envelope
@@ -423,7 +440,8 @@ function advanceQueue(keyCode) {
 
 	var notes = queue[position];
 	$.each(notes, function(i, note) {
-		selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+		if (selectedOutput) selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+		else swsNoteOn(MIDIUtils.noteNumberToFrequency(note.number));
 	});
 }
 
@@ -439,7 +457,8 @@ function finishAdvanceQueue(keyCode) {
 		});
 
 		$.each(allActiveNotes, function(i, note) {
-			selectedOutput.send([0x90, note, 0]);
+			if (selectedOutput) selectedOutput.send([0x90, note, 0]);
+			else swsNoteOff(MIDIUtils.noteNumberToFrequency(note));
 		});
 		keyPositions = {};
 	} else {
@@ -455,7 +474,10 @@ function finishAdvanceQueue(keyCode) {
 		});
 
 		$.each(notes, function(i, note) {
-			if (!_.contains(stillActiveNotes, note.number)) selectedOutput.send([0x90, note.number, 0]);
+			if (!_.contains(stillActiveNotes, note.number)) {
+				if (selectedOutput) selectedOutput.send([0x90, note.number, 0]);
+				else swsNoteOff(MIDIUtils.noteNumberToFrequency(note.number));
+			}
 		});
 	}
 }
@@ -511,6 +533,8 @@ function redrawQueue() {
 
 		$('#queue tbody').append(row);
 	});
+
+	resetQueue();
 }
 
 // Sets the insertion point for the next notes in the queue
@@ -522,13 +546,15 @@ function setQueueInsertionPoint(element) {
 // Preview notes
 function startPreviewNotes() {
 	$.each(lastQueue, function(i, note) {
-		selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+		if (selectedOuput) selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+		else swsNoteOn(MIDIUtils.noteNumberToFrequency(note.number));
 	});
 }
 // Preview notes
 function endPreviewNotes() {
 	$.each(lastQueue, function(i, note) {
-		selectedOutput.send([0x90, note.number, 0]);
+		if (selectedOutput) selectedOutput.send([0x90, note.number, 0]);
+		else swsNoteOf(MIDIUtils.noteNumberToFrequency(note.number));
 	});
 }
 
@@ -545,4 +571,56 @@ function logNote(pressed, noteNumber, velocity, channel) {
 	onOrOff = pressed ? 'ON: ' : 'OFF: ';
 	$('#monitor').append($('<div>').addClass(pressed ? 'note-on' : 'note-off').text(onOrOff + noteNumber + (pressed ? ',' + velocity : '') + ', CH: ' + channel));
 	$('#monitor').scrollTop($('#monitor')[0].scrollHeight);
+}
+
+// Initializes the software synth
+function swsInit() {
+	masterGain.gain.value = 0.2;
+	masterGain.connect(audioContext.destination);
+}
+
+// Turn on a note on the software synth
+function swsNoteOn(frequency) {
+	// don't start the note if it's already playing
+	if (swsNowPlaying[frequency]) return;
+	else swsNowPlaying[frequency] = true;
+
+	//if (_.find(nodes, function(osc) { return osc.frequency.value === frequency; })) return;
+
+	var oscillator = audioContext.createOscillator();
+	oscillator.type = 'square';
+	oscillator.frequency.value = frequency;
+	oscillator.connect(masterGain);
+	oscillator.start(0);
+
+	nodes.push(oscillator);
+}
+
+// Turn off a note on the software synth
+function swsNoteOff(frequency) {
+	delete swsNowPlaying[frequency];
+	var new_nodes = [];
+
+	for (var i = 0; i < nodes.length; i++) {
+		if (Math.round(nodes[i].frequency.value) === Math.round(frequency)) {
+			nodes[i].stop(0);
+			nodes[i].disconnect();
+		} else {
+			new_nodes.push(nodes[i]);
+		}
+	}
+
+	nodes = new_nodes;
+}
+
+// Shifts the octave of the virtual keyboard up or down
+function reinitializeKeyboard(octave) {
+	if (octave < 0) keyboardOctave = 0;
+	else if (octave > 8) keyboardOctave = 8;
+
+	$('#keyboard').html('');
+
+	keyboardSettings.startNote = keyboardStartNote + keyboardOctave;
+	keyboard = new QwertyHancock(keyboardSettings);
+		$('#octave').text(keyboardOctave);
 }
