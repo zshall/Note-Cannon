@@ -17,11 +17,16 @@
 <html>
 <head>
 	<title>Note Cannon</title>
+	<link href="lib/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+	<link href="lib/tooltipster/css/tooltipster.css" rel="stylesheet" />
 	<link href="css/app.css" rel="stylesheet" />
 	<script src="lib/jquery-2.1.4.min.js"></script>
 	<script src="lib/underscore-min.js"></script>
 	<script src="lib/keymaster.js"></script>
 	<script src="lib/WebMIDIAPI.min.js"></script>
+	<script src="lib/MIDIUtils.js"></script>
+	<script src="lib/qwerty-hancock.min.js"></script>
+	<script src="lib/tooltipster/js/jquery.tooltipster.min.js"></script>
 	<script src="js/app.js"></script>
 </head>
 <body>
@@ -36,7 +41,9 @@
 		<input type="checkbox" id="cbReplaceOnRest" checked disabled /> Replace all last notes on rest
 	</p>
 	<p>
-		MIDI Output: <select id="selOutputs"></select>
+		MIDI Output: <select id="selOutputs">
+			<option value="BuiltInSws">Built in Software Synth</option>
+		</select>
 		<input type="checkbox" id="cbFixedVelocity" /> Fixed output velocity
 	</p>
 	<p>
@@ -48,17 +55,43 @@
 	</p>
 
 	<div id="actions">
-		<button id="btnClear" class="btn-red">Reset</button>
-		<button id="btnUndo" class="btn-red">Delete Note(s) at Arrow</button>
-		<button id="btnPreview">Preview Last Note(s)</button>
-		<button id="btnClearLast">Clear Last Note(s)</button>
-		<button id="btnAddLast">Add Last Note(s)</button>
-		<button id="btnReset" class="btn-green">Reset Queue Position</button>
-		<button id="btnPlay" class="btn-green">Play (Tap Melody)</button>
+		<div class="group group-red">
+			<div class="group-header">Queue</div>
+			<div class="group-content">
+				<button id="btnClear" class="btn-red tooltip" title="Reset"><i class="fa fa-file-o"></i></button>
+				<button id="btnUndo" class="btn-red tooltip" title="Delete Note(s) at Arrow"><i class="fa fa-undo"></i></button>
+			</div>
+		</div>
+		<div class="group group-blue">
+			<div class="group-header">Step Input</div>
+			<div class="group-content">
+				<button id="btnPreview" class="tooltip" title="Preview Last Note(s)"><i class="fa fa-music"></i></button>
+				<button id="btnClearLast" class="tooltip" title="Clear Last Note(s)"><i class="fa fa-times"></i></button>
+				<button id="btnAddLast" class="tooltip" title="Add Last Note(s)"><i class="fa fa-plus"></i></button>
+				<button id="btnShowKeyboard" class="tooltip" title="Show / Hide Virtual MIDI Keyboard"><img src="img/piano-01.svg" width="10px" height="10px"></button>
+
+			</div>
+		</div>
+		<div class="group group-green">
+			<div class="group-header">Performance</div>
+			<div class="group-content">
+				<button id="btnReset" class="btn-green tooltip" title="Reset Queue Position"><i class="fa fa-backward"></i></button>
+				<button id="btnPlay" class="btn-green tooltip" title="Play (Tap Melody)"><i class="fa fa-play"></i></button>
+			</div>
+		</div>
 	</div>
 
 	<p>Last Played Notes:</p>
 	<table id="lastQueue"><tr><td>None</td></tr></table>
+
+	<div id="virtualInput">
+		<p>
+			<button id="btnOctaveDown" class="tooltip" title="Octave Down"><i class="fa fa-arrow-left"></i></button>
+			<button id="btnOctaveUp" class="tooltip" title="Octave Up"><i class="fa fa-arrow-right"></i></button>
+			Current octave: <span id="octave">3</span>
+		</p>
+		<div id="keyboard"></div>
+	</div>
 
 	<p>Cannon:</p>
 
