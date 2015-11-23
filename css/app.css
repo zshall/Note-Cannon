@@ -80,6 +80,9 @@ p {
 .btn-green:hover {
 	background-color:#5cbf2a;
 }
+button img {
+	box-shadow: 0px 1px 1px #2f6627;
+}
 
 .btn-red {
 	background-color:#e4685d;
@@ -163,4 +166,40 @@ tr.active {
 
 .remove-sequence, .position {
 	cursor: pointer;
+}
+
+/* Groups */
+.group {
+	display: inline-block;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.group-header {
+	font-variant: small-caps;
+	border-bottom: 2px solid;
+}
+
+.group-red {
+	background: #ffbbb5;
+}
+
+.group-red .group-header {
+	border-color: #e4685d;
+}
+
+.group-green {
+	background: #71ff97;
+}
+
+.group-green .group-header {
+	border-color: #44c767;
+}
+
+.group-blue {
+	background: #b7d0ff;
+}
+
+.group-blue .group-header {
+	border-color: #7892c2;
 }
