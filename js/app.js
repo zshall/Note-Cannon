@@ -546,7 +546,7 @@ function setQueueInsertionPoint(element) {
 // Preview notes
 function startPreviewNotes() {
 	$.each(lastQueue, function(i, note) {
-		if (selectedOuput) selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
+		if (selectedOutput) selectedOutput.send([0x90, note.number, $('#cbFixedVelocity').prop('checked') ? 127 : note.velocity]);
 		else swsNoteOn(MIDIUtils.noteNumberToFrequency(note.number));
 	});
 }
