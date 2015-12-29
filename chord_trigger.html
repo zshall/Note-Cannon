@@ -1,0 +1,41 @@
+<html>
+<head>
+	<title>Custom Chords</title>
+	<link href="lib/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+	<link href="lib/tooltipster/css/tooltipster.css" rel="stylesheet" />
+	<link href="css/app.css" rel="stylesheet" />
+	<script src="lib/jquery-2.1.4.min.js"></script>
+	<script src="lib/underscore-min.js"></script>
+	<script src="lib/keymaster.js"></script>
+	<script src="lib/WebMIDIAPI.min.js"></script>
+	<script src="lib/MIDIUtils.js"></script>
+	<script src="lib/qwerty-hancock.min.js"></script>
+	<script src="lib/tooltipster/js/jquery.tooltipster.min.js"></script>
+	<script src="js/chord_trigger.js"></script>
+</head>
+<body>
+
+<div id="monitor">
+	Chord Sets:
+	<p>
+		<button id="btnSave">Save</button>
+	</p>
+</div>
+
+<div id="container">
+	<p>
+		MIDI Input: <select id="selInputs"></select>
+	</p>
+	<p>
+		MIDI Output: <select id="selOutputs">
+			<option value="BuiltInSws">Built in Software Synth</option>
+		</select>
+		<input type="checkbox" id="cbLearn" checked> Learn
+	</p>
+
+	<table id="pads">
+	</table>
+</div>
+
+</body>
+</html>

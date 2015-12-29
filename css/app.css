@@ -156,6 +156,23 @@ tr.active {
 	color: white;
 }
 
+#pads td {
+	width: 64px;
+	height: 64px;
+}
+
+#pads td.active {
+	background: #566963;
+}
+
+#pads td.learning {
+	background: green;
+}
+
+#monitor a {
+	display: block;
+}
+
 #lastQueue {
 	height: 30px;
 }
