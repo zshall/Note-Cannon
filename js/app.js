@@ -198,6 +198,18 @@ $(document).ready(function() {
 		$('#virtualInput').slideToggle();
 	});
 
+	key('alt+s', function() {
+		var saveSlot = prompt('Enter save slot name:', localStorage['_lastSaveSlotName'] || '');
+		localStorage['_lastSaveSlotName'] = saveSlot;
+		localStorage[saveSlot] = JSON.stringify(queue);
+	});
+
+	key('alt+l', function() {
+		var saveSlot = prompt('Load slot:', localStorage['_lastSaveSlotName'] || '');
+		queue = JSON.parse(localStorage[saveSlot]);
+		redrawQueue();
+	})
+
 	// window.beforeunload = function() {
 	// 	stopAllOutput();
 	// }
@@ -554,7 +566,7 @@ function startPreviewNotes() {
 function endPreviewNotes() {
 	$.each(lastQueue, function(i, note) {
 		if (selectedOutput) selectedOutput.send([0x90, note.number, 0]);
-		else swsNoteOf(MIDIUtils.noteNumberToFrequency(note.number));
+		else swsNoteOff(MIDIUtils.noteNumberToFrequency(note.number));
 	});
 }
 
